@@ -20,7 +20,7 @@ function buildkite-del () {
   curl --request DELETE \
        --silent \
        --header 'Accept: application/json' \
-       --header "Authorization: Bearer ${BUILDITE_TOKEN}" \
+       --header "Authorization: Bearer ${BUILDKITE_TOKEN}" \
        "${BUILDKITE_API_ENDPOINT}${PTH}"
 }
 
@@ -43,7 +43,7 @@ function buildkite-get () {
   curl --request GET \
        --silent \
        --header 'Accept: application/json' \
-       --header "Authorization: Bearer ${BUILDITE_TOKEN}" \
+       --header "Authorization: Bearer ${BUILDKITE_TOKEN}" \
        "${BUILDKITE_API_ENDPOINT}${PTH}${QRY}"
 }
 
@@ -63,7 +63,7 @@ function buildkite-post () {
        --silent \
        --header 'Content-type: application/json' \
        --header 'Accept: application/json' \
-       --header "Authorization: Bearer ${BUILDITE_TOKEN}" \
+       --header "Authorization: Bearer ${BUILDKITE_TOKEN}" \
        --data $DTA \
        "${BUILDKITE_API_ENDPOINT}${PTH}"
 }
