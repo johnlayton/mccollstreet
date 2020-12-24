@@ -1,4 +1,4 @@
-## sumo
+## buildkite
 
 ### Setup oh-my-zsh
 
