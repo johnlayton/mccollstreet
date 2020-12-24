@@ -4,17 +4,11 @@
 
 export BUILDKITE_API_ENDPOINT="https://api.buildkite.com"
 
-unset BUILDKITE_DEBUG
-
 function buildkite-del () {
   local PTH=""
 
   if [[ -n "${1}" ]]; then
     PTH="/${1}"
-  fi
-
-  if [[ -n "${BUILDKITE_DEBUG}" ]]; then
-    logger warn "Delete to api ${PTH}"
   fi
 
   curl --request DELETE \
@@ -36,10 +30,6 @@ function buildkite-get () {
     QRY="?${2}"
   fi
 
-  if [[ -n "${BUILDKITE_DEBUG}" ]]; then
-    logger warn "Get to api ${PTH}"
-  fi
-
   curl --request GET \
        --silent \
        --header 'Accept: application/json' \
@@ -53,10 +43,6 @@ function buildkite-post () {
 
   if [[ -n "${1}" ]]; then
     PTH="/${1}"
-  fi
-
-  if [[ -n "${BUILDKITE_DEBUG}" ]]; then
-    logger warn "Post to api ${PTH}"
   fi
 
   curl --request POST \
