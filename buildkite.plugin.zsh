@@ -77,6 +77,7 @@ function _buildkite {
     'help:Usage information'
     'init:Initialisation information'
     'pipeline:Manage pipelines'
+    'build:Manage builds'
   )
 
   if (( CURRENT == 2 )); then
@@ -84,7 +85,11 @@ function _buildkite {
   elif (( CURRENT == 3 )); then
     case "$words[2]" in
       pipeline) subcmds=(
-        'list:list all the pipelines'
+        'list:List all the pipelines'
+        )
+        _describe 'command' subcmds ;;
+      build) subcmds=(
+        'trigger:Trigger a build'
         )
         _describe 'command' subcmds ;;
     esac
@@ -114,7 +119,7 @@ function _buildkite::init {
 }
 
 #####################################################################
-# User
+# Pipeline
 #####################################################################
 
 function _buildkite::pipeline () {
@@ -138,4 +143,36 @@ EOF
 
 function _buildkite::pipeline::list () {
   buildkite-get "v2/organizations/${BUILDKITE_ORG}/pipelines"
+}
+
+#####################################################################
+# Build
+#####################################################################
+
+function _buildkite::build () {
+  (( $# > 0 && $+functions[_buildkite::build::$1] )) || {
+    cat <<EOF
+Usage: buildkite build <command> [options]
+
+Available commands:
+
+  trigger [slug]
+
+EOF
+    return 1
+  }
+
+  local command="$1"
+  shift
+
+  _buildkite::build::$command "$@"
+}
+
+function _buildkite::build::trigger () {
+  local PIPELINE_SLUG=${1:-"unknown"}
+  local DATA=" -d '{
+    \"commit\": \"HEAD\",
+    \"branch\": \"master\"
+}'"
+  buildkite-post "v2/organizations/${BUILDKITE_ORG}/pipelines/${PIPELINE_SLUG}/build" "${DATA}"
 }
