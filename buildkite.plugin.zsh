@@ -174,5 +174,5 @@ function _buildkite::build::trigger () {
     \"commit\": \"HEAD\",
     \"branch\": \"master\"
 }'"
-  buildkite-post "v2/organizations/${BUILDKITE_ORG}/pipelines/${PIPELINE_SLUG}/build" "${DATA}"
+  buildkite-post "v2/organizations/${BUILDKITE_ORG}/pipelines/${PIPELINE_SLUG}/builds" "${DATA}"
 }
