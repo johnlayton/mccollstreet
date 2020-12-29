@@ -173,6 +173,6 @@ function _buildkite::build::trigger () {
   local DATA="{
     \"commit\": \"HEAD\",
     \"branch\": \"master\"
-}'"
+}"
   buildkite-post "v2/organizations/${BUILDKITE_ORG}/pipelines/${PIPELINE_SLUG}/builds" "${DATA}"
 }
