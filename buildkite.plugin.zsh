@@ -170,7 +170,7 @@ EOF
 
 function _buildkite::build::trigger () {
   local PIPELINE_SLUG=${1:-"unknown"}
-  local DATA=" -d '{
+  local DATA="{
     \"commit\": \"HEAD\",
     \"branch\": \"master\"
 }'"
