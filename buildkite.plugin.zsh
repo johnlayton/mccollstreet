@@ -188,10 +188,9 @@ function _buildkite::build::show () {
 }
 
 function _buildkite::build::trigger () {
-  local BRANCH=${2:-"master"}
   local DATA="{
     \"commit\": \"HEAD\",
-    \"branch\": \"${BRANCH}\"
+    \"branch\": \"${2:-"master"}\"
 }"
   buildkite-post "v2/organizations/${BUILDKITE_ORG}/pipelines/${1:-"unknown"}/builds" "${DATA}"
 }
