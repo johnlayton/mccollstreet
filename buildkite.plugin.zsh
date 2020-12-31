@@ -148,7 +148,7 @@ function _buildkite::pipeline::list () {
   buildkite-get "v2/organizations/${BUILDKITE_ORG}/pipelines"
 }
 
-function _buildkite::pipeline:show () {
+function _buildkite::pipeline::show () {
   buildkite-get "v2/organizations/${BUILDKITE_ORG}/pipelines/${1:-"unknown"}"
 }
 
