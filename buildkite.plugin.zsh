@@ -90,7 +90,9 @@ function _buildkite {
         )
         _describe 'command' subcmds ;;
       build) subcmds=(
-        'trigger:Trigger a build'
+        'list:List builds for a pipeline'
+        'show:Show a build for a pipeline'
+        'trigger:Trigger a build for a pipeline'
         )
         _describe 'command' subcmds ;;
     esac
@@ -163,6 +165,8 @@ Usage: buildkite build <command> [options]
 
 Available commands:
 
+  list    [pipeline]
+  show    [pipeline] [build]
   trigger [pipeline] <branch>
 
 EOF
@@ -175,12 +179,19 @@ EOF
   _buildkite::build::$command "$@"
 }
 
+function _buildkite::build::list () {
+  buildkite-get "v2/organizations/${BUILDKITE_ORG}/pipelines/${1:-"unknown"}/builds"
+}
+
+function _buildkite::build::show () {
+  buildkite-get "v2/organizations/${BUILDKITE_ORG}/pipelines/${1:-"unknown"}/builds/${2:-"1"}"
+}
+
 function _buildkite::build::trigger () {
-  local PIPELINE=${1:-"unknown"}
   local BRANCH=${2:-"master"}
   local DATA="{
     \"commit\": \"HEAD\",
     \"branch\": \"${BRANCH}\"
 }"
-  buildkite-post "v2/organizations/${BUILDKITE_ORG}/pipelines/${PIPELINE}/builds" "${DATA}"
+  buildkite-post "v2/organizations/${BUILDKITE_ORG}/pipelines/${1:-"unknown"}/builds" "${DATA}"
 }
