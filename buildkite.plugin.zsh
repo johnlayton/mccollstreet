@@ -108,6 +108,7 @@ Usage: buildkite <command> [options]
 Available commands:
 
   pipeline
+  build
 
 EOF
 }
@@ -148,8 +149,7 @@ function _buildkite::pipeline::list () {
 }
 
 function _buildkite::pipeline:get () {
-  local PIPELINE=${1:-"unknown"}
-  buildkite-get "v2/organizations/${BUILDKITE_ORG}/pipelines${PIPELINE}"
+  buildkite-get "v2/organizations/${BUILDKITE_ORG}/pipelines/${1:-"unknown"}"
 }
 
 #####################################################################
