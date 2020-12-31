@@ -86,7 +86,7 @@ function _buildkite {
     case "$words[2]" in
       pipeline) subcmds=(
         'list:List all the pipelines'
-        'get:Get a pipeline'
+        'show:Show a pipeline'
         )
         _describe 'command' subcmds ;;
       build) subcmds=(
@@ -132,7 +132,7 @@ Usage: buildkite pipeline <command> [options]
 Available commands:
 
   list
-  get [pipeline]
+  show [pipeline]
 
 EOF
     return 1
@@ -148,7 +148,7 @@ function _buildkite::pipeline::list () {
   buildkite-get "v2/organizations/${BUILDKITE_ORG}/pipelines"
 }
 
-function _buildkite::pipeline:get () {
+function _buildkite::pipeline:show () {
   buildkite-get "v2/organizations/${BUILDKITE_ORG}/pipelines/${1:-"unknown"}"
 }
 
