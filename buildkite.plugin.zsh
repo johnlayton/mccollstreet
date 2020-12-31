@@ -86,6 +86,7 @@ function _buildkite {
     case "$words[2]" in
       pipeline) subcmds=(
         'list:List all the pipelines'
+        'get:Get a pipeline'
         )
         _describe 'command' subcmds ;;
       build) subcmds=(
@@ -130,6 +131,7 @@ Usage: buildkite pipeline <command> [options]
 Available commands:
 
   list
+  get [pipeline]
 
 EOF
     return 1
@@ -145,6 +147,11 @@ function _buildkite::pipeline::list () {
   buildkite-get "v2/organizations/${BUILDKITE_ORG}/pipelines"
 }
 
+function _buildkite::pipeline:get () {
+  local PIPELINE=${1:-"unknown"}
+  buildkite-get "v2/organizations/${BUILDKITE_ORG}/pipelines${PIPELINE}"
+}
+
 #####################################################################
 # Build
 #####################################################################
@@ -156,7 +163,7 @@ Usage: buildkite build <command> [options]
 
 Available commands:
 
-  trigger [slug]
+  trigger [pipeline] <branch>
 
 EOF
     return 1
@@ -169,10 +176,11 @@ EOF
 }
 
 function _buildkite::build::trigger () {
-  local PIPELINE_SLUG=${1:-"unknown"}
+  local PIPELINE=${1:-"unknown"}
+  local BRANCH=${2:-"master"}
   local DATA="{
     \"commit\": \"HEAD\",
-    \"branch\": \"master\"
+    \"branch\": \"${BRANCH}\"
 }"
-  buildkite-post "v2/organizations/${BUILDKITE_ORG}/pipelines/${PIPELINE_SLUG}/builds" "${DATA}"
+  buildkite-post "v2/organizations/${BUILDKITE_ORG}/pipelines/${PIPELINE}/builds" "${DATA}"
 }
