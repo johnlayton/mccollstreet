@@ -3,19 +3,29 @@
 #####################################################################
 
 export BUILDKITE_API_ENDPOINT="https://api.buildkite.com"
+export BUILDKITE_API_DEBUG=0
 
-function buildkite-del () {
-  local PTH=""
+function buildkite-curl-flags () {
+  case "${BUILDKITE_API_DEBUG}" in
+    0) echo "--silent" ;;
+    1) echo "--verbose --trace-ascii /dev/stderr" ;;
+  esac
+}
 
-  if [[ -n "${1}" ]]; then
-    PTH="/${1}"
-  fi
+function buildkite-stream () {
+  jq -cn --stream 'fromstream(1|truncate_stream(inputs))'
+}
 
-  curl --request DELETE \
-       --silent \
-       --header 'Accept: application/json' \
-       --header "Authorization: Bearer ${BUILDKITE_TOKEN}" \
-       "${BUILDKITE_API_ENDPOINT}${PTH}"
+function buildkite-fields () {
+  local QUERY=""
+  for FIELD in "${@}"; do
+    QUERY="$QUERY \"${FIELD}\"  : .${FIELD},"
+  done
+  jq -r "{ ${QUERY} }"
+}
+
+function buildkite-token () {
+  echo -n "${BUILDKITE_TOKEN}"
 }
 
 function buildkite-get () {
@@ -30,8 +40,8 @@ function buildkite-get () {
     QRY="?${2}"
   fi
 
-  curl --request GET \
-       --silent \
+  curl $(buildkite-curl-flags)\
+       --request GET \
        --header 'Accept: application/json' \
        --header "Authorization: Bearer ${BUILDKITE_TOKEN}" \
        "${BUILDKITE_API_ENDPOINT}${PTH}${QRY}"
@@ -45,13 +55,21 @@ function buildkite-post () {
     PTH="/${1}"
   fi
 
-  curl --request POST \
-       --silent \
+  curl $(buildkite-curl-flags)\
+       --request POST \
        --header 'Content-type: application/json' \
        --header 'Accept: application/json' \
        --header "Authorization: Bearer ${BUILDKITE_TOKEN}" \
        --data $DTA \
        "${BUILDKITE_API_ENDPOINT}${PTH}"
+}
+
+function buildkite-pipeline-show () {
+  buildkite pipeline list | jq -r '.[] | "\(.slug):\(.name)"'
+}
+
+function buildkite-build-show () {
+  buildkite build list $1 | jq -r '.[] | "\(.number):\(.message | split("\n")[:1] | .[] )"'
 }
 
 function buildkite () {
@@ -75,6 +93,7 @@ function _buildkite {
   local -a cmds subcmds
   cmds=(
     'help:Usage information'
+    'debug:Enable debugging curl commands'
     'init:Initialisation information'
     'pipeline:Manage pipelines'
     'build:Manage builds'
@@ -96,6 +115,27 @@ function _buildkite {
         )
         _describe 'command' subcmds ;;
     esac
+  elif (( CURRENT == 4 )); then
+      case "${words[1]}-${words[2]}-${words[3]}" in
+          buildkite-pipeline-show)
+            subcmds=("${(@f)$(buildkite-pipeline-show)}")
+            _describe 'command' subcmds ;;
+          buildkite-build-list)
+            subcmds=("${(@f)$(buildkite-pipeline-show)}")
+            _describe 'command' subcmds ;;
+          buildkite-build-show)
+            subcmds=("${(@f)$(buildkite-pipeline-show)}")
+            _describe 'command' subcmds ;;
+          buildkite-build-trigger)
+            subcmds=("${(@f)$(buildkite-pipeline-show)}")
+            _describe 'command' subcmds ;;
+      esac
+  elif (( CURRENT == 5 )); then
+      case "${words[1]}-${words[2]}-${words[3]}" in
+          buildkite-build-show)
+            subcmds=("${(@f)$(buildkite-build-show ${words[4]})}")
+            _describe 'command' subcmds ;;
+      esac
   fi
 
   return 0
@@ -115,11 +155,37 @@ Available commands:
 EOF
 }
 
+#####################################################################
+# Init
+#####################################################################
+
 function _buildkite::init {
-  echo "============================================="
-  echo "Create a new access id and key pair and export\n  BUILDKITE_ORG=<organisation_slug>\n  BUILDKITE_TOKEN=<generated_token>"
-  echo "============================================="
-  open "https://buildkite.com/user/api-access-tokens"
+
+  if [ -n "${BUILDKITE_API_ENDPOINT}" ] && [ -n "${BUILDKITE_TOKEN}" ]; then
+    echo "============================================="
+    echo "BUILDKITE_API_ENDPOINT ..... ${BUILDKITE_API_ENDPOINT}"
+    echo "BUILDKITE_ORG .............. ${BUILDKITE_ORG}"
+    echo "BUILDKITE_TOKEN ............ ${BUILDKITE_TOKEN:0:4}***${BUILDKITE_TOKEN:${#BUILDKITE_TOKEN}-4}"
+    echo "============================================="
+  else
+    echo "============================================="
+    echo "Create a new access id and key pair and export;"
+    echo "BUILDKITE_ORG=<organisation_slug>"
+    echo "BUILDKITE_TOKEN=<generated_token>"
+    echo "============================================="
+    open "https://buildkite.com/user/api-access-tokens"
+  fi
+}
+
+#####################################################################
+# Debug
+#####################################################################
+
+function _buildkite::debug () {
+  export BUILDKITE_API_DEBUG=$((1-BUILDKITE_API_DEBUG))
+  echo "================================================================"
+  echo "Toggle the buildkite api curl debug to [${BUILDKITE_API_DEBUG}]"
+  echo "================================================================"
 }
 
 #####################################################################
@@ -147,7 +213,7 @@ EOF
 }
 
 function _buildkite::pipeline::list () {
-  buildkite-get "v2/organizations/${BUILDKITE_ORG}/pipelines"
+  buildkite-get "v2/organizations/${BUILDKITE_ORG}/pipelines?page=1&per_page=100"
 }
 
 function _buildkite::pipeline::show () {
@@ -180,7 +246,7 @@ EOF
 }
 
 function _buildkite::build::list () {
-  buildkite-get "v2/organizations/${BUILDKITE_ORG}/pipelines/${1:-"unknown"}/builds"
+  buildkite-get "v2/organizations/${BUILDKITE_ORG}/pipelines/${1:-"unknown"}/builds?page={}&per_page=10"
 }
 
 function _buildkite::build::show () {
@@ -188,9 +254,6 @@ function _buildkite::build::show () {
 }
 
 function _buildkite::build::trigger () {
-  local DATA="{
-    \"commit\": \"HEAD\",
-    \"branch\": \"${2:-"master"}\"
-}"
+  local DATA="{ \"commit\": \"HEAD\", \"branch\": \"${2:-"master"}\" }"
   buildkite-post "v2/organizations/${BUILDKITE_ORG}/pipelines/${1:-"unknown"}/builds" "${DATA}"
 }
