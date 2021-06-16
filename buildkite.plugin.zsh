@@ -246,7 +246,7 @@ EOF
 }
 
 function _buildkite::build::list () {
-  buildkite-get "v2/organizations/${BUILDKITE_ORG}/pipelines/${1:-"unknown"}/builds?page={}&per_page=10"
+  buildkite-get "v2/organizations/${BUILDKITE_ORG}/pipelines/${1:-"unknown"}/builds?page=1&per_page=10"
 }
 
 function _buildkite::build::show () {
