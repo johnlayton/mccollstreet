@@ -1,8 +1,8 @@
-## buildkite
+## mccollstreet
 
 ### Setup oh-my-zsh
 
-#### Install buildkite plugin
+#### Install mccollstreet plugin
 ```zsh
 pushd $ZSH/custom/plugins && \
   git clone git@github.com:johnlayton/mccollstreet.git mccollstreet && \
