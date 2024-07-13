@@ -5,23 +5,23 @@
 #### Install buildkite plugin
 ```zsh
 pushd $ZSH/custom/plugins && \
-  git clone git@github.com:johnlayton/mccollstreet.git buildkite && \
+  git clone git@github.com:johnlayton/mccollstreet.git mccollstreet && \
   popd || echo "I'm broken"
 ```
 ```zsh
-plugins=(... buildkite)
+plugins=(... mccollstreet)
 ```
 
 ### Setup other
 
 ```zsh
 pushd $HOME && \
-  git clone git@github.com:johnlayton/mccollstreet.git .buildkite && \
+  git clone git@github.com:johnlayton/mccollstreet.git .mccollstreet && \
   popd || echo "I'm broken"
 ```
 
 ```zsh
-source ~/.buildkite/buildkite.plugin.zsh
+source ~/.mccollstreet/mccollstreet.plugin.zsh
 ```
 
 

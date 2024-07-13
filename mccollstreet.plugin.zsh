@@ -1,6 +1,3 @@
-#####################################################################
-# Init
-#####################################################################
 
 export BUILDKITE_API_ENDPOINT="https://api.buildkite.com"
 export BUILDKITE_API_DEBUG=0
